@@ -17,6 +17,7 @@ To install these packages, open RStudio and run the following commands:
 - install.packages("readxl")
 - install.packages("tcltk")
 
+<br/>
 
 ## File Location
 In order to successfully run the script, the files must be saved to a folder named "jpmorgan-check-transformer" on the computer Desktop. This folder should contain the following files downloaded from this GitHub repository:
@@ -28,6 +29,7 @@ A subfolder, "script" should contain:
 
 - Transform.r
 
+<br/>
 
 ## Running the Script
 Once all of the above steps have been followed, the script can be run with the following steps:
