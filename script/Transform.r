@@ -9,6 +9,10 @@ library("tcltk")
 ## set variable user
 user <- Sys.getenv("USERNAME")
 
+######################
+## Question: Where would this process live, ideally? Demo was from the Desktop, but we can change this to any location on the machine.
+######################
+
 ## set variable wd as path to JPMorgan folder on desktop
 wd <- paste("C:\\Users\\", user, "\\Desktop\\jpmorgan-check-transform", sep="")
 
@@ -27,6 +31,10 @@ expected_cols <- c("Check format","Payment date","Amount","Account number","Paym
 
 if(identical(file_cols,expected_cols)) {
 
+######################
+## Question: Is there a specific filename you would like the output file to have? Currently coded as simply "output.csv"
+######################
+  
 ## set variable filename
 filename <- paste(wd, "\\output.csv", sep="")
 
