@@ -10,7 +10,8 @@ library("tcltk")
 user <- Sys.getenv("USERNAME")
 
 ######################
-## Question: Where would this process live, ideally? Demo was from the Desktop, but we can change this to any location on the machine.
+## Question: Where would this process live, ideally? Demo was from the Desktop, but we can change this to any
+## location on the machine.
 ######################
 
 ## set variable wd as path to JPMorgan folder on desktop
@@ -18,6 +19,13 @@ wd <- paste("C:\\Users\\", user, "\\Desktop\\jpmorgan-check-transform", sep="")
 
 ## setwd
 setwd(wd)
+
+######################
+## Question: Will this process be run one file at a time, and/or with batches of multiple source files?
+## Current set-up assumes one single source file, with specific filename SourceData.xlsx. 
+## I can adjust this filename for the source data if there is something else you'd prefer, or change the process
+## to look for all .xlsx files, regardless of name, in the root folder, and output a csv of the same name.
+######################
 
 ## check that SourceData.xlsx exists in wd
 if (file.exists("SourceData.xlsx")) {
@@ -32,7 +40,8 @@ expected_cols <- c("Check format","Payment date","Amount","Account number","Paym
 if(identical(file_cols,expected_cols)) {
 
 ######################
-## Question: Is there a specific filename you would like the output file to have? Currently coded as simply "output.csv"
+## Question: Is there a specific filename you would like the output file to have? Currently coded as simply
+## "output.csv". Filename can include dynamic info such as current date.
 ######################
   
 ## set variable filename
@@ -73,7 +82,8 @@ for (row in 1:nrow(payment_numbers)) {
   write.table(line5, "output.csv", sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
 ######################
-## Question: currently set Country to NULL if state is not populated, since Country doesn't pull to source data file. Would you prefer it be a holder text like "COUNTRY"?
+## Question: currently set Country to NULL if state is not populated, since Country doesn't pull to source
+## data file. Would you prefer it be a holder text like "COUNTRY"?
 ######################
   
   ## set variable country
@@ -103,9 +113,11 @@ for (row in 1:nrow(payment_numbers)) {
     net <- gross - discount
     
 ######################
-## Question: Description is often longer than 30 characters in the source file. Should the script be set up to truncate to 30 characters?
-## Question: Notes in example file said description should not have any commas, but with a comma delimited file, you can encase a string containing commas in quotations, so that it will be parsed correctly.
-## Commas are allowed in Payee name (e.g., " , inc."), so is this note about no commas in Description really correct?
+## Question: Description is often longer than 30 characters in the source file. Should the script be set up
+## to truncate to 30 characters? Notes doc indicated 30 character maximum.
+## Question: Notes in example file said description should not have any commas, but with a comma delimited
+## file, you can encase a string containing commas in quotations, so that it will be parsed correctly.
+## Commas are allowed in Payee name (e.g., " , inc."), so is this note about no commas in Description correct?
 ######################
 
     ## set variable description
@@ -130,7 +142,8 @@ footer <- data.frame("FILTRL",linecount)
 write.table(footer, "output.csv", sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
 
 ######################
-## Discussion: Error handling. Currently set the file to return an error if SourceData.xlsx is not found in the directory, and also if SourceData.xlsx does not have the expected column headers.
+## Discussion: Error handling. Currently set the file to return an error if SourceData.xlsx is not found in
+## the directory, and also if SourceData.xlsx does not have the expected column headers.
 ## Question: Any other errors that should be thrown?
 ######################
 
