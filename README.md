@@ -12,32 +12,34 @@ To test that R has been installed and added to the Path environement variable su
 ### R Packages
 Two R packages must be installed on the computer in order for the script to successfully run: readxl and tcltk.
 
-To install these packages, open RStudio and run the following commands:
+To install these packages, open RStudio or RGUI and run the following commands:
 
 - install.packages("readxl")
 - install.packages("tcltk")
 
+Confirm successful installation of each package after running each command. Each package library will either be saved to the C:\ drive or in a personal library on successful install.
+
 <br/>
 
-## File Location
-In order to successfully run the script, the files must be saved to a folder named "jpmorgan-check-transformer" on the computer Desktop. This folder should contain the following files downloaded from this GitHub repository:
+## Directory Set-Up
 
-- README.md
-- RunTransformation.cmd
+This script has been developed to be run from any directory location, as long as the following requirements are met:
 
-A subfolder, "script" should contain:
+- Script file (Transform.r) is stored in the same folder as the command file (RunTransformation.cmd).
 
-- Transform.r
+- Two sub-folders must exist in this directory:
+    * "input"
+    * "output"
 
 <br/>
 
 ## Running the Script
-Once all of the above steps have been followed, the script can be run with the following steps:
+Once all of the above set-up steps have been followed, the script can be run as follows:
 
-1. Export the Financial Edge query file (.xlsx) and save to the jpmorgan-check-transform folder as "SourceDate.xlsx".
+1. Export the Financial Edge query file(s) (.xlsx) that need to be transformed for JPMorgan check creation. Save the file(s) in the "input" folder.
 
-2. Double click RunTransformation.cmd to call the transformation.
+2. Double click RunTransformation.cmd in the main directory to call the transformation.
 
-3. If any error messages pop up, read and then troubleshoot the indicated error.
+3. If any error message pops up, read the message and then troubleshoot the indicated error.
 
-4. If successfully run, the transformed file for JPMorgan (output.csv) will be created in the jpmorgan-check-transform folder. You may need to refresh the Windows File Explorer to see the new file.
+4. If successfully run, the transformed file(s) for JPMorgan will be created in the "output" folder. The output csv(s) will have the same filename(s) as the input file(s). You may need to refresh the Windows File Explorer to see the new file(s).
