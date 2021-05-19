@@ -6,11 +6,8 @@
 library("readxl")
 library("tcltk")
 
-## set variable wd as path to JPMorgan Check Printing folder in Finance R drive
-wd <- "Y:\\Finance\\Accounts Payable\\JP Morgan Check Printing\\"
-
-## setwd
-setwd(wd)
+## set variable wd as path to current working directory (i.e., location of the file)
+wd <- getwd()
 
 ## set variable xslx_files as array of .xslx files in input folder
 input_dir <- paste(wd, "\\input\\", sep="")
@@ -46,6 +43,9 @@ write.table(header, filename, sep = ",", quote = TRUE, na = "", col.names = FALS
 ## set variable linecount as 1
 linecount <- 1
 
+## set variable no_country as 0
+no_country <- 0
+
 ## create dataframe of unique payment numbers from source_data
 payment_numbers <- data.frame(unique(source_data[,5]))
 
@@ -66,6 +66,19 @@ for (row in 1:nrow(payment_numbers)) {
   line3 <- data.frame("PAYENM",payment_info[1,]$`Payee name`,"","VENDOR ID")
   write.table(line3, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
+  ## error handling for missing address information
+  ## if TRUE, then delete in progress file then raise error message, else continue rest of script
+  if (is.na(payment_info[1,]$`Address line 1`)) {
+    
+    ## delete in-progress file
+    file.remove(filename)
+    
+    ## raise error message
+    error_msg <- paste("Missing Address Line 1 for payment number ", paynum, ".\n\nPlease review and correct all address information for payment number ", paynum, " in the input file ", input_filename, " and then re-run the transformation.",  sep="")
+    tcltk::tk_messageBox(caption = "Error", message = error_msg,  icon = "error", type = "ok")
+    
+  } else {
+  
   line4 <- data.frame("PYEADD",payment_info[1,]$`Address line 1`,payment_info[1,]$`Address line 2`)
   write.table(line4, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
@@ -73,10 +86,11 @@ for (row in 1:nrow(payment_numbers)) {
   write.table(line5, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
   ## set variable country
-  if (length(payment_info[1,]$`State/Province`) > 0) {
-    country <- 'USA'
-  } else {
+  if (is.na(payment_info[1,]$`State/Province`)) {
     country <- 'XXX'
+    no_country <- no_country + 1
+  } else {
+    country <- 'USA'
   }
   
   line6 <- data.frame("PYEPOS",payment_info[1,]$City,payment_info[1,]$`State/Province`,payment_info[1,]$`ZIP/Post code`,country)
@@ -104,7 +118,7 @@ for (row in 1:nrow(payment_numbers)) {
     net_formatted <- format(net, digits = 2, decimal.mark = ".", nsmall = 2)
 
     ## set variable description
-    description <- strtrim(gsub(',', '', payment_info[1,]$Description),30)
+    description <- strtrim(gsub(',', '', payment_info[i,]$Description),30)
     
     ## create line item dataframe
     line <- data.frame("RMTDTL",payment_info[i,]$`Invoice number`,description,payment_info[i,]$`Invoice date`,net_formatted,gross_formatted,discount_formatted)
@@ -124,10 +138,19 @@ linecount <- linecount + 1
 footer <- data.frame("FILTRL",linecount)
 write.table(footer, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
 
+## notification about Country field needing review in the output file
+if (no_country > 0) {
+notice <- paste("The output file ", filename, " has ", no_country, " payments that require a review of the Country field. The placeholder 'XXX' has been populated where review is needed.", sep="")
+tcltk::tk_messageBox(caption = "Notification", message = notice, icon = "info", type = "ok")
+}
+
+  } ## end of missing Address Line 1 error handling
+
 } else {
   error_message <- paste(input_filename, " is not structured correctly.\n\nExpected column headers and column order:\n\n", paste(expected_cols, collapse = ', '), "\n\nPlease make sure that ", input_filename, " has all columns, and in the correct order and then run RunTransformation.cmd again.", sep="")
   tcltk::tk_messageBox(caption = "Error", message = error_message, icon = "error", type = "ok")
-}
+} ## end of incorrect file structure error handling
+
 } } else {
   tcltk::tk_messageBox(caption = "Error", message = "Input .xslx file(s) not found in the 'input' folder.\n\nPlease add Financial Edge export .xlsx file(s) to the folder and then run RunTransformation.cmd again.", icon = "error", type = "ok")
-}
+} ## end of no input files error handling

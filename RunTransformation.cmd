@@ -1,1 +1,1 @@
-RScript script\Transform.r
+RScript Transform.r
