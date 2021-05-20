@@ -27,10 +27,11 @@ This script has been developed to be run from any directory location, as long as
 
 - Script file (Transform.r) is stored in the same folder as the command file (RunTransformation.cmd).
 
-- Two sub-folders must exist in this directory:
+- Three sub-folders must exist in this directory:
+    * "completed"
     * "input"
     * "output"
-
+    
 <br/>
 
 ## Running the Script
@@ -40,6 +41,6 @@ Once all of the above set-up steps have been followed, the script can be run as 
 
 2. Double click RunTransformation.cmd in the main directory to call the transformation.
 
-3. If any error message pops up, read the message and then troubleshoot the indicated error.
+3. If any error message or notifications pop up, read the message and troubleshoot as needed.
 
-4. If successfully run, the transformed file(s) for JPMorgan will be created in the "output" folder. The output csv(s) will have the same filename(s) as the input file(s). You may need to refresh the Windows File Explorer to see the new file(s).
+4. If successfully run, the transformed file(s) for JPMorgan will be created in the "output" folder. The output csv(s) will have the same filename(s) as the input file(s). Input files will be moved to the "completed" folder following a successful transformation. Any input files that raised an error during the process will stay in the "input" folder. You may need to refresh the Windows File Explorer to see the new file(s).

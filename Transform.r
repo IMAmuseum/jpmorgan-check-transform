@@ -8,12 +8,13 @@ library("tcltk")
 
 ## set variable wd as path to current working directory (i.e., location of the file)
 wd <- getwd()
+## wd <- "Y:\\Finance\\Accounts Payable\\JP Morgan Check Printing\\"
 
 ## set variable xslx_files as array of .xslx files in input folder
 input_dir <- paste(wd, "\\input\\", sep="")
 file_list <- list.files(input_dir, "*.xlsx$")
 
-## check that at least one input .xlsx was provided
+## error handling to check that at least one input .xlsx was provided
 if (length(file_list) != 0) {
 
 ## loop through input .xlsx files to output transformed .csv
@@ -25,14 +26,19 @@ input_filename <- file_list[x]
 ## read source .xlsx file into R
 source_data <- read_excel(input_filepath)
 
-## check that SourceData.xlsx is structured as expected
+## check that source_data is structured as expected
 file_cols <- colnames(source_data)
 expected_cols <- c("Check format","Payment date","Amount","Account number","Payment number","Payee name","Address line 1","Address line 2","City","State/Province","ZIP/Post code","Invoice number","Description","Invoice date","Invoice amount","Discount amount","Payment type")
 
-if(identical(file_cols,expected_cols)) {
+if (identical(file_cols,expected_cols)) {
+  
+## check that there are no null Address line 1 rows
+na_add <- source_data[which(is.na(source_data$`Address line 1`)), ]
+
+if (nrow(na_add) == 0) {
   
 ## set variable filename
-filename <- paste(wd, "output\\", gsub("xlsx", "csv", input_filename), sep="")
+filename <- paste(wd, "\\output\\", gsub("xlsx", "csv", input_filename), sep="")
 
 ## create header dataframe for output file
 header <- data.frame("FILHDR","PWS","",Sys.Date(),format(Sys.time(), format = "%H:%M:%S"))
@@ -51,7 +57,7 @@ payment_numbers <- data.frame(unique(source_data[,5]))
 
 ## loop through payment_numbers dataframe to process each payment into a new block in the csv
 for (row in 1:nrow(payment_numbers)) {
-  
+    
   ## set variable paynum
   paynum <- payment_numbers[row,1]
   
@@ -65,19 +71,6 @@ for (row in 1:nrow(payment_numbers)) {
   
   line3 <- data.frame("PAYENM",payment_info[1,]$`Payee name`,"","VENDOR ID")
   write.table(line3, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
-  
-  ## error handling for missing address information
-  ## if TRUE, then delete in progress file then raise error message, else continue rest of script
-  if (is.na(payment_info[1,]$`Address line 1`)) {
-    
-    ## delete in-progress file
-    file.remove(filename)
-    
-    ## raise error message
-    error_msg <- paste("Missing Address Line 1 for payment number ", paynum, ".\n\nPlease review and correct all address information for payment number ", paynum, " in the input file ", input_filename, " and then re-run the transformation.",  sep="")
-    tcltk::tk_messageBox(caption = "Error", message = error_msg,  icon = "error", type = "ok")
-    
-  } else {
   
   line4 <- data.frame("PYEADD",payment_info[1,]$`Address line 1`,payment_info[1,]$`Address line 2`)
   write.table(line4, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
@@ -124,11 +117,11 @@ for (row in 1:nrow(payment_numbers)) {
     line <- data.frame("RMTDTL",payment_info[i,]$`Invoice number`,description,payment_info[i,]$`Invoice date`,net_formatted,gross_formatted,discount_formatted)
     write.table(line, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
 
-  }
-  
+    }
+      
   ## update linecount
   linecount <- linecount + 5 + nrow(payment_info)
-  
+
 }
 
 ## update linecount to add footer row
@@ -138,19 +131,31 @@ linecount <- linecount + 1
 footer <- data.frame("FILTRL",linecount)
 write.table(footer, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
 
+
+## move completed source file to completed folder
+destination <- paste(wd, "\\completed\\", sep="")
+file.copy(input_filepath, destination)
+file.remove(input_filepath)
+
 ## notification about Country field needing review in the output file
 if (no_country > 0) {
-notice <- paste("The output file ", filename, " has ", no_country, " payments that require a review of the Country field. The placeholder 'XXX' has been populated where review is needed.", sep="")
-tcltk::tk_messageBox(caption = "Notification", message = notice, icon = "info", type = "ok")
+  notice <- paste("The output file ", filename, " has ", no_country, " payments that require a review of the Country field. The placeholder 'XXX' has been populated where review is needed.", sep="")
+  tcltk::tk_messageBox(caption = "Notification", message = notice, icon = "info", type = "ok")
 }
 
-  } ## end of missing Address Line 1 error handling
+} else {
+  na_add_paynums <- data.frame(unique(na_add[,5]))
+  error_message <- paste(input_filename, " contains ", nrow(na_add_paynums), " payments that are missing Address Line 1 information.\n\nThe payment number(s) with missing Address Line 1 information are:\n\n", paste(na_add_paynums, collapse = ', '), "\n\nPlease make sure that ", input_filename, " has Address line 1 information for all payments, then run RunTransformation.cmd again.\n\nIf other input files were staged for this transformation, the process will continue and transform to csv those input files that are well-formed.", sep="")
+  tcltk::tk_messageBox(caption = "Error", message = error_message, icon = "error", type = "ok")
+} ## end of missing Address line 1 error handling
 
 } else {
-  error_message <- paste(input_filename, " is not structured correctly.\n\nExpected column headers and column order:\n\n", paste(expected_cols, collapse = ', '), "\n\nPlease make sure that ", input_filename, " has all columns, and in the correct order and then run RunTransformation.cmd again.", sep="")
+  error_message <- paste(input_filename, " is not structured correctly.\n\nExpected column headers and column order:\n\n", paste(expected_cols, collapse = ', '), "\n\nPlease make sure that ", input_filename, " has all columns, and in the correct order and then run RunTransformation.cmd again.\n\nIf other input files were staged for this transformation, the process will continue and transform to csv those input files that are well-formed.", sep="")
   tcltk::tk_messageBox(caption = "Error", message = error_message, icon = "error", type = "ok")
 } ## end of incorrect file structure error handling
 
 } } else {
   tcltk::tk_messageBox(caption = "Error", message = "Input .xslx file(s) not found in the 'input' folder.\n\nPlease add Financial Edge export .xlsx file(s) to the folder and then run RunTransformation.cmd again.", icon = "error", type = "ok")
 } ## end of no input files error handling
+
+  
