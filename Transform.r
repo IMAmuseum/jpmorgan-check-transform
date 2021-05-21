@@ -32,10 +32,17 @@ expected_cols <- c("Check format","Payment date","Amount","Account number","Paym
 
 if (identical(file_cols,expected_cols)) {
   
-## check that there are no null Address line 1 rows
-na_add <- source_data[which(is.na(source_data$`Address line 1`)), ]
+## check that there are no null address rows
+na_addline1 <- source_data[which(is.na(source_data$`Address line 1`)), ]
+na_city <- source_data[which(is.na(source_data$City)), ]
+na_state <- source_data[which(is.na(source_data$`State/Province`)), ]
+na_zip <- source_data[which(is.na(source_data$`ZIP/Post code`)), ]
 
-if (nrow(na_add) == 0) {
+if (nrow(na_addline1) == 0 && nrow(na_city) == 0 && nrow(na_state) == 0 && nrow(na_zip) == 0) {
+
+## print transformation status message
+message1 <- paste("No errors in ", input_filename, ". Transforming to csv for JPMorgan.", sep="")
+print(message1)
   
 ## set variable filename
 filename <- paste(wd, "\\output\\", gsub("xlsx", "csv", input_filename), sep="")
@@ -60,6 +67,11 @@ for (row in 1:nrow(payment_numbers)) {
     
   ## set variable paynum
   paynum <- payment_numbers[row,1]
+  paynum_total <- nrow(payment_numbers)
+  
+  ## print message on payment processing status
+  message2 <- paste("Processing payment ", row, " of ", paynum_total, ".", sep="")
+  print(message2)
   
   ## create dataframe payment_info with all rows of source_data that match paynum
   payment_info <- source_data[which(source_data$`Payment number`== paynum), ]
@@ -69,7 +81,7 @@ for (row in 1:nrow(payment_numbers)) {
   line2 <- data.frame("PMTHDR","USPS","AP6DFDL",payment_info[1,]$`Payment date`,subtotal,payment_info[1,]$`Account number`,payment_info[1,]$`Payment number`)
   write.table(line2, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
-  line3 <- data.frame("PAYENM",payment_info[1,]$`Payee name`,"","VENDOR ID")
+  line3 <- data.frame("PAYENM",payment_info[1,]$`Payee name`,"","VNDRID")
   write.table(line3, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
   line4 <- data.frame("PYEADD",payment_info[1,]$`Address line 1`,payment_info[1,]$`Address line 2`)
@@ -78,12 +90,15 @@ for (row in 1:nrow(payment_numbers)) {
   line5 <- data.frame("ADDPYE","","")
   write.table(line5, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
+  ## create vector state_codes
+  state_codes <- c("AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","PR","RI","SC","SD","TN","TX","UT","VT","VA","VI","WA","WV","WI","WY")
+  
   ## set variable country
-  if (is.na(payment_info[1,]$`State/Province`)) {
+  if (payment_info[1,]$`State/Province` %in% state_codes) {
+    country <- 'USA'
+  } else {
     country <- 'XXX'
     no_country <- no_country + 1
-  } else {
-    country <- 'USA'
   }
   
   line6 <- data.frame("PYEPOS",payment_info[1,]$City,payment_info[1,]$`State/Province`,payment_info[1,]$`ZIP/Post code`,country)
@@ -131,11 +146,14 @@ linecount <- linecount + 1
 footer <- data.frame("FILTRL",linecount)
 write.table(footer, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
 
-
 ## move completed source file to completed folder
 destination <- paste(wd, "\\completed\\", sep="")
 file.copy(input_filepath, destination)
 file.remove(input_filepath)
+
+## print message of transformation complete
+message3 <- paste("Transformation of ", input_filename, " complete!", sep="")
+print(message3)
 
 ## notification about Country field needing review in the output file
 if (no_country > 0) {
@@ -144,10 +162,14 @@ if (no_country > 0) {
 }
 
 } else {
-  na_add_paynums <- data.frame(unique(na_add[,5]))
-  error_message <- paste(input_filename, " contains ", nrow(na_add_paynums), " payments that are missing Address Line 1 information.\n\nThe payment number(s) with missing Address Line 1 information are:\n\n", paste(na_add_paynums, collapse = ', '), "\n\nPlease make sure that ", input_filename, " has Address line 1 information for all payments, then run RunTransformation.cmd again.\n\nIf other input files were staged for this transformation, the process will continue and transform to csv those input files that are well-formed.", sep="")
+  na_addline1_paynums <- data.frame(unique(na_addline1[,5]))
+  na_city_paynums <- data.frame(unique(na_city[,5]))
+  na_state_paynums <- data.frame(unique(na_state[,5]))
+  na_zip_paynums <- data.frame(unique(na_zip[,5]))
+  na_add_paynums <- unique(c(na_addline1_paynums$Payment.number, na_city_paynums$Payment.number, na_state_paynums$Payment.number, na_zip_paynums$Payment.number))
+  error_message <- paste(input_filename, " contains ", nrow(na_add_paynums), " payments that are missing address information in the Address Line 1, City, State/Provence, and/or Zip/Postal Code columns.\n\nThe payment number(s) with missing address information are:\n\n", paste(na_add_paynums, collapse = ', '), "\n\nPlease make sure that ", input_filename, " has address information populated for all payments in Address Line 1, City, State/Provence, and Zip/Postal Code fields, then run RunTransformation.cmd again.\n\nIf other input files were staged for this transformation, the process will continue and transform to csv those input files that are well-formed.", sep="")
   tcltk::tk_messageBox(caption = "Error", message = error_message, icon = "error", type = "ok")
-} ## end of missing Address line 1 error handling
+} ## end of missing address information error handling
 
 } else {
   error_message <- paste(input_filename, " is not structured correctly.\n\nExpected column headers and column order:\n\n", paste(expected_cols, collapse = ', '), "\n\nPlease make sure that ", input_filename, " has all columns, and in the correct order and then run RunTransformation.cmd again.\n\nIf other input files were staged for this transformation, the process will continue and transform to csv those input files that are well-formed.", sep="")
