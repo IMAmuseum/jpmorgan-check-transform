@@ -78,13 +78,35 @@ for (row in 1:nrow(payment_numbers)) {
   
   ## populate static info for each payment into csv
   subtotal <- format(payment_info[1,]$Amount, digits = 2, decimal.mark = ".", nsmall = 2)
-  line2 <- data.frame("PMTHDR","USPS","AP6DFDL",payment_info[1,]$`Payment date`,subtotal,payment_info[1,]$`Account number`,payment_info[1,]$`Payment number`)
+  line2 <- data.frame("PMTHDR","USPS","CHASECKS",payment_info[1,]$`Payment date`,subtotal,payment_info[1,]$`Account number`,payment_info[1,]$`Payment number`)
   write.table(line2, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
-  line3 <- data.frame("PAYENM",payment_info[1,]$`Payee name`,"","VNDRID")
+  ## set variable vendor
+  vendor <- gsub(',', '', payment_info[1,]$`Payee name`)
+  if (nchar(vendor) > 35) {
+    vendor_notice <- paste("The vendor, '", vendor, "', for payment number ", paynum, " from the input file ", input_filename, " exceeds the 35 character vendor name limit. The JPMorgan Chase check formatting process will continue until complete. Please modify the vendor name in the resulting output file. You may want to modify the vendor record in Financial Edge to avoid hitting this character limit in the future.", sep="")
+    tcltk::tk_messageBox(caption = "Notification", message = vendor_notice, icon = "info", type = "ok")
+  }
+  
+  line3 <- data.frame("PAYENM",vendor,"","VNDRID")
   write.table(line3, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
-  line4 <- data.frame("PYEADD",payment_info[1,]$`Address line 1`,payment_info[1,]$`Address line 2`)
+  ## set variable address1
+  address1 <- gsub(',', '', payment_info[1,]$`Address line 1`)
+  if (nchar(address1) > 35) {
+    address1_notice <- paste("The address line 1, '", address1, "', for payment number ", paynum, " from the input file ", input_filename, " exceeds the 35 character address line 1 limit. The JPMorgan Chase check formatting process will continue until complete. Please modify the vendor name in the resulting output file. You may want to modify the vendor record in Financial Edge to avoid hitting this character limit in the future.", sep="")
+    tcltk::tk_messageBox(caption = "Notification", message = address1_notice, icon = "info", type = "ok")
+  }
+  
+  ## set variable address2
+  address2 <- gsub(',', '', payment_info[1,]$`Address line 2`)
+  if (is.na(address2)) {} else
+  if (nchar(address2) > 35) {
+    address2_notice <- paste("The address line 2, '", address2, "', for payment number ", paynum, " from the input file ", input_filename, " exceeds the 35 character address line 2 limit. The JPMorgan Chase check formatting process will continue until complete. Please modify the vendor name in the resulting output file. You may want to modify the vendor record in Financial Edge to avoid hitting this character limit in the future.", sep="")
+    tcltk::tk_messageBox(caption = "Notification", message = address2_notice, icon = "info", type = "ok")
+  }
+  
+  line4 <- data.frame("PYEADD",address1,address2,"3179231331")
   write.table(line4, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
   line5 <- data.frame("ADDPYE","","")
@@ -170,6 +192,7 @@ if (no_country > 0) {
   error_message <- paste(input_filename, " contains ", nrow(na_add_paynums), " payments that are missing address information in the Address Line 1, City, State/Provence, and/or Zip/Postal Code columns.\n\nThe payment number(s) with missing address information are:\n\n", paste(na_add_paynums, collapse = ', '), "\n\nPlease make sure that ", input_filename, " has address information populated for all payments in Address Line 1, City, State/Provence, and Zip/Postal Code fields, then run RunTransformation.cmd again.\n\nIf other input files were staged for this transformation, the process will continue and transform to csv those input files that are well-formed.", sep="")
   tcltk::tk_messageBox(caption = "Error", message = error_message, icon = "error", type = "ok")
 } ## end of missing address information error handling
+
 
 } else {
   error_message <- paste(input_filename, " is not structured correctly.\n\nExpected column headers and column order:\n\n", paste(expected_cols, collapse = ', '), "\n\nPlease make sure that ", input_filename, " has all columns, and in the correct order and then run RunTransformation.cmd again.\n\nIf other input files were staged for this transformation, the process will continue and transform to csv those input files that are well-formed.", sep="")
