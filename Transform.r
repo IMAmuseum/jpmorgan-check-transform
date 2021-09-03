@@ -8,12 +8,12 @@ library("tcltk")
 
 ## set variable wd as path to current working directory (i.e., location of the file)
 wd <- getwd()
-wd <- "C:\\Users\\snorling\\Desktop\\jpmorgan-check-transform"
+## wd <- "C:\\Users\\snorling\\Desktop\\jpmorgan-check-transform"
 ## wd <- "Y:\\Finance\\Accounts Payable\\JP Morgan Check Printing\\"
 
 ## set variable xslx_files as array of .xslx files in input folder
 input_dir <- paste(wd, "\\input\\", sep="")
-file_list <- list.files(input_dir, "*.xlsx$")
+file_list <- list.files(input_dir, "*.xlsx$", ignore.case = TRUE)
 
 ## error handling to check that at least one input .xlsx was provided
 if (length(file_list) != 0) {
@@ -46,13 +46,13 @@ message1 <- paste("No errors in ", input_filename, ". Transforming to csv for JP
 print(message1)
   
 ## set variable filename
-filename <- paste(wd, "\\output\\", gsub("xlsx", "csv", input_filename), sep="")
+filename <- paste(wd, "\\output\\", gsub("XLSX", "csv", gsub("xlsx", "csv", input_filename)), sep="")
 
 ## delete filename from output folder, in case lingering from previous run
 if (file.exists(filename)) { file.remove(filename) }
 
 ## create header dataframe for output file
-header <- data.frame("FILHDR","PWS","",format(Sys.Date(), "%m/%d/%Y"),format(Sys.time(), format = "%H:%M:%S"))
+header <- data.frame("FILHDR","PWS","",format(Sys.Date(), "%m/%d/%Y"),"")
 
 ## write header to csv
 write.table(header, filename, sep = ",", quote = TRUE, na = "", col.names = FALSE, row.names = FALSE)
@@ -80,9 +80,12 @@ for (row in 1:nrow(payment_numbers)) {
   ## create dataframe payment_info with all rows of source_data that match paynum
   payment_info <- source_data[which(source_data$`Payment number`== paynum), ]
   
+  ## create variable payment_date
+  payment_date <- payment_info[1,]$`Payment date`
+  
   ## populate static info for each payment into csv
   subtotal <- format(payment_info[1,]$Amount, digits = 2, decimal.mark = ".", nsmall = 2)
-  line2 <- data.frame("PMTHDR","USPS","CHASECKS",format(payment_info[1,]$`Payment date`, "%m/%d/%Y"),subtotal,payment_info[1,]$`Account number`,payment_info[1,]$`Payment number`)
+  line2 <- data.frame("PMTHDR","USPS","CHASECKS",payment_date,subtotal,payment_info[1,]$`Account number`,payment_info[1,]$`Payment number`)
   write.table(line2, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
   ## set variable vendor
