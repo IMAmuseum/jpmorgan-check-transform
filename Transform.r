@@ -55,7 +55,7 @@ if (file.exists(filename)) { file.remove(filename) }
 header <- data.frame("FILHDR","PWS","",format(Sys.Date(), "%m/%d/%Y"),"")
 
 ## write header to csv
-write.table(header, filename, sep = ",", quote = TRUE, na = "", col.names = FALSE, row.names = FALSE)
+write.table(header, filename, sep = ",", quote = FALSE, na = "", col.names = FALSE, row.names = FALSE)
 
 ## set variable linecount as 1
 linecount <- 1
@@ -86,7 +86,7 @@ for (row in 1:nrow(payment_numbers)) {
   ## populate static info for each payment into csv
   subtotal <- format(payment_info[1,]$Amount, digits = 2, decimal.mark = ".", nsmall = 2)
   line2 <- data.frame("PMTHDR","USPS","CHASECKS",payment_date,subtotal,payment_info[1,]$`Account number`,payment_info[1,]$`Payment number`)
-  write.table(line2, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
+  write.table(line2, filename, sep = ",", quote = FALSE, na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
   ## set variable vendor
   vendor <- gsub(',', '', payment_info[1,]$`Payee name`)
@@ -96,7 +96,7 @@ for (row in 1:nrow(payment_numbers)) {
   }
   
   line3 <- data.frame("PAYENM",vendor,"","VNDRID")
-  write.table(line3, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
+  write.table(line3, filename, sep = ",", quote = FALSE, na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
   ## set variable address1
   address1 <- gsub(',', '', payment_info[1,]$`Address line 1`)
@@ -114,10 +114,10 @@ for (row in 1:nrow(payment_numbers)) {
   }
   
   line4 <- data.frame("PYEADD",address1,address2,"3179231331")
-  write.table(line4, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
+  write.table(line4, filename, sep = ",", quote = FALSE, na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
   line5 <- data.frame("ADDPYE","","")
-  write.table(line5, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
+  write.table(line5, filename, sep = ",", quote = FALSE, na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
   ## create vector state_codes
   state_codes <- c("AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","PR","RI","SC","SD","TN","TX","UT","VT","VA","VI","WA","WV","WI","WY")
@@ -131,7 +131,7 @@ for (row in 1:nrow(payment_numbers)) {
   }
   
   line6 <- data.frame("PYEPOS",payment_info[1,]$City,payment_info[1,]$`State/Province`,payment_info[1,]$`ZIP/Post code`,country)
-  write.table(line6, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
+  write.table(line6, filename, sep = ",", quote = FALSE, na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
   ## loop through payment_info to add one line to the csv per item
   for (i in 1:nrow(payment_info)) {
@@ -159,7 +159,7 @@ for (row in 1:nrow(payment_numbers)) {
     
     ## create line item dataframe
     line <- data.frame("RMTDTL",payment_info[i,]$`Invoice number`,description,payment_info[i,]$`Invoice date`,net_formatted,gross_formatted,discount_formatted)
-    write.table(line, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
+    write.table(line, filename, sep = ",", quote = FALSE, na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
 
     }
       
@@ -173,7 +173,7 @@ linecount <- linecount + 1
 
 ## create footer dataframe and add line to output.csv
 footer <- data.frame("FILTRL",linecount)
-write.table(footer, filename, sep = ",", na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
+write.table(footer, filename, sep = ",", quote = FALSE, na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
 
 ## move completed source file to completed folder
 destination <- paste(wd, "\\completed\\", sep="")
