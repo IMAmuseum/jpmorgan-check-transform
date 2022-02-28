@@ -11,7 +11,7 @@ wd <- getwd()
 ## wd <- "C:\\Users\\snorling\\Desktop\\jpmorgan-check-transform"
 ## wd <- "Y:\\Finance\\Accounts Payable\\JP Morgan Check Printing\\"
 
-## set variable xslx_files as array of .xslx files in input folder
+## set variable file_list as array of .xslx files in input folder
 input_dir <- paste(wd, "\\input\\", sep="")
 file_list <- list.files(input_dir, "*.xlsx$", ignore.case = TRUE)
 
