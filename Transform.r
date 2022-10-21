@@ -8,7 +8,7 @@ library("tcltk")
 
 ## set variable wd as path to current working directory (i.e., location of the file)
 wd <- getwd()
-## wd <- "C:\\Users\\snorling\\Desktop\\jpmorgan-check-transform"
+## wd <- "C:\\jpmorgan-check-transform"
 ## wd <- "Y:\\Finance\\Accounts Payable\\JP Morgan Check Printing\\"
 
 ## set variable file_list as array of .xslx files in input folder

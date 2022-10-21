@@ -1,4 +1,6 @@
-
+input/
+output/
+completed/
 SourceData.xlsx
 output.csv
 .Rhistory
