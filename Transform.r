@@ -120,17 +120,38 @@ for (row in 1:nrow(payment_numbers)) {
   write.table(line5, filename, sep = ",", quote = FALSE, na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
   ## create vector state_codes
-  state_codes <- c("AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","PR","RI","SC","SD","TN","TX","UT","VT","VA","VI","WA","WV","WI","WY")
+  state_codes <- c("AL","AK","AZ","AR","CA","CO","CT","DE","DC","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","PR","RI","SC","SD","TN","TX","UT","VT","VA","VI","WA","WV","WI","WY","AB","BC","MB","NB","NL","NT","NS","NU","ON","PE","QC","SK","YT")
+  
+  ## create vector state_names
+  state_names <- c("Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","District of Columbia","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Puerto Rico","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Virgin Islands","Washington","West Virginia","Wisconsin","Wyoming","Alberta","British Columbia","Manitoba","New Brunswick","Newfoundland and Labrador","Northwest Territories","Nova Scotia","Nunavut","Ontario","Prince Edward Island","Quebec","Saskatchewan","Yukon")
+  
+  ## create vector country_codes
+  country_codes <- c("USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","USA","CAN","CAN","CAN","CAN","CAN","CAN","CAN","CAN","CAN","CAN","CAN","CAN","CAN")
+  
+  ## create states_df
+  states_df <- data.frame(state_codes,state_names,country_codes)
   
   ## set variable country
-  if (payment_info[1,]$`State/Province` %in% state_codes) {
+  if (payment_info[1,]$`State/Province` %in% state_codes | payment_info[1,]$`State/Province` %in% state_names) {
     country <- 'USA'
   } else {
     country <- 'XXX'
     no_country <- no_country + 1
   }
+
+  ## set variable state_code
+  if (payment_info[1,]$`State/Province` %in% state_codes) {
+    state_code <- payment_info[1,]$`State/Province`
+  } else if (payment_info[1,]$`State/Province` %in% state_names) {
+    state_row <- states_df[which(states_df$state_names== payment_info[1,]$`State/Province`), ]
+    state_code <- state_row$state_codes
+  } else {
+    state_code <- 'XX'
+    state_notice <- paste("The State/Province, '", payment_info[1,]$`State/Province`, "', for payment number ", paynum, " from the input file ", input_filename, " did not match possible U.S. state codes or state names. A placeholder state code 'XX' has been entered in the output file. After the transformation completes running, please review that payment and provide the accurate state code for the payee address. It is likely a non-U.S. address.", sep="")
+    tcltk::tk_messageBox(caption = "Notification", message = state_notice, icon = "info", type = "ok")
+  }
   
-  line6 <- data.frame("PYEPOS",payment_info[1,]$City,payment_info[1,]$`State/Province`,payment_info[1,]$`ZIP/Post code`,country)
+  line6 <- data.frame("PYEPOS",payment_info[1,]$City,state_code,payment_info[1,]$`ZIP/Post code`,country)
   write.table(line6, filename, sep = ",", quote = FALSE, na = "", col.names = FALSE, row.names = FALSE, append = TRUE)
   
   ## loop through payment_info to add one line to the csv per item
