@@ -132,8 +132,12 @@ for (row in 1:nrow(payment_numbers)) {
   states_df <- data.frame(state_codes,state_names,country_codes)
   
   ## set variable country
-  if (payment_info[1,]$`State/Province` %in% state_codes | payment_info[1,]$`State/Province` %in% state_names) {
-    country <- 'USA'
+  if (payment_info[1,]$`State/Province` %in% state_codes) {
+    country_row <- states_df[which(states_df$state_codes== payment_info[1,]$`State/Province`), ]
+    country <- country_row$country_codes
+  } else if (payment_info[1,]$`State/Province` %in% state_names) {
+    country_row <- states_df[which(states_df$state_names== payment_info[1,]$`State/Province`), ]
+    country <- country_row$country_codes
   } else {
     country <- 'XXX'
     no_country <- no_country + 1
